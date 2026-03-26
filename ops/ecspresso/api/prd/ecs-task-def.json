@@ -1,0 +1,55 @@
+{
+  "family": "ecs-basic-api-prd",
+  "cpu": "256",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "executionRoleArn": "arn:aws:iam::{{ ssm `/ecspresso-prd/aws-account-id` }}:role/ecs-task-execution-prd",
+  "taskRoleArn": "arn:aws:iam::{{ ssm `/ecspresso-prd/aws-account-id` }}:role/ecs-basic-prd",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "{{ ssm `/ecspresso-prd/aws-account-id` }}.dkr.ecr.ap-northeast-1.amazonaws.com/ecs-basic-prd:{{ ssm `image-tag-ecs-basic-prd` }}",
+      "cpu": 0,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "RAILS_ENV",            "value": "production" },
+        { "name": "RAILS_LOG_TO_STDOUT",  "value": "true" },
+        { "name": "RAILS_MAX_THREADS",    "value": "5" },
+        { "name": "WEB_CONCURRENCY",      "value": "2" }
+      ],
+      "secrets": [
+        { "name": "DB_HOST",        "valueFrom": "{{ ssm `/ecspresso-prd/rds-host` }}" },
+        { "name": "DB_USERNAME",    "valueFrom": "{{ ssm `/ecspresso-prd/rds-secret-arn` }}:username::" },
+        { "name": "DB_PASSWORD",    "valueFrom": "{{ ssm `/ecspresso-prd/rds-secret-arn` }}:password::" },
+        { "name": "SECRET_KEY_BASE","valueFrom": "/ecspresso-prd/secret-key-base" }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/ecs-basic-api-prd",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "readonlyRootFilesystem": false
+    }
+  ],
+  "tags": [
+    { "key": "Env", "value": "prd" }
+  ]
+}

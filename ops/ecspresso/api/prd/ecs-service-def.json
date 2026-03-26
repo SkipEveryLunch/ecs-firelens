@@ -1,0 +1,39 @@
+{
+  "desiredCount": 1,
+  "capacityProviderStrategy": [
+    { "capacityProvider": "FARGATE_SPOT", "weight": 1, "base": 0 }
+  ],
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": { "enable": true, "rollback": true },
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100
+  },
+  "deploymentController": { "type": "ECS" },
+  "availabilityZoneRebalancing": "DISABLED",
+  "enableECSManagedTags": true,
+  "enableExecuteCommand": false,
+  "platformFamily": "Linux",
+  "platformVersion": "1.4.0",
+  "propagateTags": "NONE",
+  "schedulingStrategy": "REPLICA",
+  "loadBalancers": [
+    {
+      "containerName": "app",
+      "containerPort": 3000,
+      "targetGroupArn": "{{ ssm `/ecspresso-prd/tg-arn-api` }}"
+    }
+  ],
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "assignPublicIp": "ENABLED",
+      "securityGroups": ["{{ ssm `/ecspresso-prd/sg-id-ecs` }}"],
+      "subnets": [
+        "{{ ssm `/ecspresso-prd/public-subnet-id-1a` }}",
+        "{{ ssm `/ecspresso-prd/public-subnet-id-1c` }}"
+      ]
+    }
+  },
+  "tags": [
+    { "key": "Env", "value": "prd" }
+  ]
+}
