@@ -1,0 +1,44 @@
+services:
+  app:
+    image: ruby:3.3.4-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+    command: >
+      sh -c "
+        apt-get update -qq &&
+        apt-get install -y --no-install-recommends build-essential libpq-dev curl &&
+        rm -rf /var/lib/apt/lists/* &&
+        bundle install &&
+        bundle exec rails db:prepare &&
+        bundle exec rails server -b 0.0.0.0
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ecs_basic_development
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bundle_cache:
+  db_data:
