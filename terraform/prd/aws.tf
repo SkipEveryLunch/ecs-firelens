@@ -93,7 +93,7 @@ module "alb" {
 }
 
 /************************************************************
- * RDS (Aurora Serverless v2)
+ * RDS (PostgreSQL)
  ************************************************************/
 module "rds" {
   source            = "../modules/aws/rds"
@@ -160,6 +160,6 @@ module "parameter_store" {
     "${local.ssm_prefix}/public-subnet-id-1a" = module.subnet.id_public_1a
     "${local.ssm_prefix}/public-subnet-id-1c" = module.subnet.id_public_1c
     "${local.ssm_prefix}/rds-secret-arn"      = module.rds.secret_arn
-    "${local.ssm_prefix}/rds-host"            = module.rds.cluster_endpoint
+    "${local.ssm_prefix}/rds-host"            = module.rds.endpoint
   }
 }
