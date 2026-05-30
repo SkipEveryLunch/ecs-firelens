@@ -1,17 +1,48 @@
 {
   "family": "ecs-basic-api-prd",
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "512",
+  "memory": "1024",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "executionRoleArn": "arn:aws:iam::{{ ssm `/ecspresso-prd/aws-account-id` }}:role/ecs-task-execution-prd",
   "taskRoleArn": "arn:aws:iam::{{ ssm `/ecspresso-prd/aws-account-id` }}:role/ecs-basic-prd",
   "containerDefinitions": [
     {
+      "name": "log_router",
+      "image": "{{ ssm `/ecspresso-prd/aws-account-id` }}.dkr.ecr.ap-northeast-1.amazonaws.com/ecs-basic-log-router-prd:{{ ssm `image-tag-ecs-basic-log-router-prd` }}",
+      "cpu": 0,
+      "essential": true,
+      "user": "0",
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "enable-ecs-log-metadata": "false",
+          "config-file-type": "file",
+          "config-file-value": "/extra.conf"
+        }
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/ecs-basic-log-router-prd",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "readonlyRootFilesystem": false
+    },
+    {
       "name": "app",
       "image": "{{ ssm `/ecspresso-prd/aws-account-id` }}.dkr.ecr.ap-northeast-1.amazonaws.com/ecs-basic-prd:{{ ssm `image-tag-ecs-basic-prd` }}",
       "cpu": 0,
       "essential": true,
+      "dependsOn": [
+        {
+          "containerName": "log_router",
+          "condition": "START"
+        }
+      ],
       "portMappings": [
         {
           "containerPort": 3000,
@@ -26,12 +57,15 @@
         "startPeriod": 0
       },
       "logConfiguration": {
-        "logDriver": "awslogs",
+        "logDriver": "awsfirelens",
         "options": {
-          "awslogs-create-group": "true",
-          "awslogs-group": "/ecs/ecs-basic-api-prd",
-          "awslogs-region": "ap-northeast-1",
-          "awslogs-stream-prefix": "ecs"
+          "Name": "http",
+          "Host": "hooks.slack.com",
+          "Port": "443",
+          "URI": "{{ ssm `/ecspresso-prd/slack-webhook-uri` }}",
+          "TLS": "on",
+          "TLS.Verify": "off",
+          "Format": "json"
         }
       },
       "readonlyRootFilesystem": true

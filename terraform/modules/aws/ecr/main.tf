@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "main" {
-  name                 = "${var.project_name}-${var.env}"
+  name                 = var.name != "" ? var.name : "${var.project_name}-${var.env}"
   image_tag_mutability = "IMMUTABLE"
 }
 

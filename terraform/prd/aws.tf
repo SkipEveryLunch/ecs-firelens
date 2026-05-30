@@ -63,6 +63,13 @@ module "ecr" {
   env          = local.env
 }
 
+module "ecr_log_router" {
+  source       = "../modules/aws/ecr"
+  project_name = local.project_name
+  env          = local.env
+  name         = "${local.project_name}-log-router-${local.env}"
+}
+
 /************************************************************
  * ECS
  ************************************************************/
@@ -159,7 +166,27 @@ module "parameter_store" {
     "${local.ssm_prefix}/tg-arn-api"          = module.target_group.arn
     "${local.ssm_prefix}/public-subnet-id-1a" = module.subnet.id_public_1a
     "${local.ssm_prefix}/public-subnet-id-1c" = module.subnet.id_public_1c
-    "${local.ssm_prefix}/rds-secret-arn"      = module.rds.secret_arn
-    "${local.ssm_prefix}/rds-host"            = module.rds.endpoint
+    "${local.ssm_prefix}/rds-secret-arn" = module.rds.secret_arn
+    "${local.ssm_prefix}/rds-host"       = module.rds.endpoint
+  }
+}
+
+# 手動登録用の箱。初回のみ REPLACE_ME を作成し、以降は値を上書きしない
+resource "aws_ssm_parameter" "slack_webhook_uri" {
+  name  = "${local.ssm_prefix}/slack-webhook-uri"
+  type  = "String"
+  value = "REPLACE_ME"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# CI/CDがビルド後に書き込む。初回のみ REPLACE_ME を作成し、以降は値を上書きしない
+resource "aws_ssm_parameter" "log_router_image_tag" {
+  name  = "image-tag-${local.project_name}-log-router-${local.env}"
+  type  = "String"
+  value = "REPLACE_ME"
+  lifecycle {
+    ignore_changes = [value]
   }
 }
