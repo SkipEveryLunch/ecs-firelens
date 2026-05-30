@@ -17,7 +17,7 @@ locals {
   // ★ backend.tf の profile と同じ値にすること
   aws_profile = "playground"
 
-  github_repo = "SkipEveryLunch/ecs-basic"
+  github_repo = "SkipEveryLunch/ecs-firelens"
 
   /************************************************************
    * 派生値（通常編集不要）
