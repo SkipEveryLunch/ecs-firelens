@@ -1,5 +1,5 @@
 region: ap-northeast-1
-cluster: "{{ ssm `/ecspresso-prd/ecs-cluster-name` }}"
+cluster: ecs-basic-prd
 service: ecs-basic-api-prd
 service_definition: ecs-service-def.json
 task_definition: ecs-task-def.json
