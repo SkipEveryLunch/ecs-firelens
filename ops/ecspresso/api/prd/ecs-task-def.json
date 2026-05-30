@@ -18,24 +18,12 @@
           "protocol": "tcp"
         }
       ],
-      "environment": [
-        { "name": "RAILS_ENV",            "value": "production" },
-        { "name": "RAILS_LOG_TO_STDOUT",  "value": "true" },
-        { "name": "RAILS_MAX_THREADS",    "value": "5" },
-        { "name": "WEB_CONCURRENCY",      "value": "2" }
-      ],
-      "secrets": [
-        { "name": "DB_HOST",        "valueFrom": "{{ ssm `/ecspresso-prd/rds-host` }}" },
-        { "name": "DB_USERNAME",    "valueFrom": "{{ ssm `/ecspresso-prd/rds-secret-arn` }}:username::" },
-        { "name": "DB_PASSWORD",    "valueFrom": "{{ ssm `/ecspresso-prd/rds-secret-arn` }}:password::" },
-        { "name": "SECRET_KEY_BASE","valueFrom": "/ecspresso-prd/secret-key-base" }
-      ],
       "healthCheck": {
         "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
         "interval": 30,
         "timeout": 5,
         "retries": 3,
-        "startPeriod": 60
+        "startPeriod": 0
       },
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -46,7 +34,7 @@
           "awslogs-stream-prefix": "ecs"
         }
       },
-      "readonlyRootFilesystem": false
+      "readonlyRootFilesystem": true
     }
   ],
   "tags": [

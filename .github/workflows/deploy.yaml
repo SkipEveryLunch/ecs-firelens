@@ -29,27 +29,8 @@ jobs:
             ENV=prd \
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }}
 
-  migrate:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.OIDC_IAM_ROLE_ARN }}
-          role-session-name: GitHubActions
-          aws-region: ap-northeast-1
-      - uses: kayac/ecspresso@v2
-        with:
-          version: v2.3.0
-      - name: Run DB migration
-        working-directory: ./ops/ecspresso/db-migrator/prd
-        run: |
-          ecspresso run --watch-container app
-
   deploy:
-    needs: migrate
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

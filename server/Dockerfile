@@ -1,34 +1,26 @@
-FROM ruby:3.3.4-slim AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev git \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY Gemfile Gemfile.lock ./
-RUN bundle config set --local without "development test" \
-    && bundle install --jobs 4 --retry 3
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
-RUN bundle exec bootsnap precompile --gemfile app/ lib/
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server .
 
 # ---
 
-FROM ruby:3.3.4-slim
+FROM alpine:3.21
+
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 curl \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/server .
 
-COPY --from=builder /usr/local/bundle /usr/local/bundle
-COPY --from=builder /app /app
-
-RUN useradd -m rails && chown -R rails:rails /app
-USER rails
+RUN adduser -D appuser && chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 3000
 
-CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+CMD ["./server"]

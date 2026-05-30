@@ -1,6 +1,9 @@
 .reference/
 PLAN.md
 
+# Go
+server/server
+
 # Terraform
 **/.terraform/
 **/terraform.tfstate
